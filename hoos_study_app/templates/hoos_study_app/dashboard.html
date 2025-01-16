@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock title %}
+
+{% block content %}
+
+<style>
+    .card {
+        transition: transform 0.3s;
+    }
+    .card:hover{
+        transform: scale(1.05);
+    }
+
+    .menu-btn {
+        background-color: transparent;
+        border: none; 
+        border-radius: 50%; /* Rounded circle */
+        padding: 0.5rem;
+        transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+    }
+    
+    .menu-btn:hover {
+        background-color: rgba(0, 0, 0, 0.2); /* Slight dimming on hover */
+    }
+    
+    .menu-btn:focus {
+        outline: none; /* Remove focus outline */
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .selectable-image {
+        width: 100%;
+        height: auto;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+    .selectable-image:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row g-4">
+    
+    {% for course, background_image, other_students in courses %}
+        
+        <div class="col-auto">
+
+            <div class="card shadow-lg position-relative" style="width: 18rem;">
+                <!-- Three-dot menu -->
+                <div class="position-absolute top-0 end-0 m-2">
+                    <button class="btn menu-btn p-1" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 50px;">
+                        <i class="bi bi-three-dots-vertical text-white fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item change-background-btn" href="#" data-bs-toggle="modal" data-bs-target="#changeBackgroundModal" data-course-id="{{ course.id }}">
+                                <i class="bi bi-image me-2"></i>
+                                Change Background
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{% url 'hoos_study_app:leave_course_group' course.id %}" method="post" class="dropdown-item p-0">
+                                {% csrf_token %}
+                                <a href="#" class="dropdown-item text-danger" onclick="this.closest('form').submit(); return false;">
+                                    <i class="bi bi-trash-fill me-2"></i>
+                                    Leave Group
+                                </a>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
+                <a href="{% url 'hoos_study_app:course_group' course.id %}" class="text-decoration-none text-reset">
+                    <!-- Card image -->
+                    <img class="card-img-top bg-primary object-fit-cover" 
+                         src="{% static 'hoos_study_app/img/card_backgrounds/' %}{{ background_image }}"
+                         style="height: 6rem; object-position: right;">
+
+                    <!-- Profile pictures stacked -->
+                    <div class="d-flex ps-3" style="margin-top: -1.5rem!important;">
+                        {% if other_students %}
+                            {% for student in other_students|slice:":4" %}
+                                <img src="{{ student.profile_picture.url }}"
+                                    class="rounded-circle border-3 border-light"
+                                    style="width: 2.25rem; height: 2.25rem;  margin-left: {% if not forloop.first %}-.75rem{% endif %};">
+                            {% endfor %}
+                            {% if other_students|length > 4 %}
+                                <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center border-2 border-light" 
+                                    style="width: 2.25rem; height: 2.25rem; margin-left: -.75rem; font-size: 0.8rem; background-color: #C8CBD2;">
+                                    +{{ other_students|length|add:"-4" }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <!-- Placeholder profile picture for consistent layout -->
+                            <div class="rounded-circle border-3 border-light"
+                                 style="width: 2.25rem; height: 2.25rem; visibility: hidden;">
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Body with course details -->
+                    <div class="card-body pt-2">
+                        <h5 class="card-title">{{ course.mnemonic }} {{ course.number }}
+                            <span class="text-muted fw-light">| <span class="fs-6">{{ course.semester }}</span></span>
+                        </h5>
+                        <p class="card-subtitle mb-2 text-body-secondary text-truncate" title="{{ course.title }}">{{ course.title }}</p>
+                        <!-- <p class="card-text">
+                            <strong>Unread:</strong>3
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-chat-dots"></i> {{ course.unread_messages_count }} new messages</li>
+                                <li><i class="bi bi-file-earmark-text"></i> {{ course.new_files_count }} new files uploaded</li>
+                                <li><i class="bi bi-calendar-event"></i> {{ course.upcoming_sessions_count }} upcoming sessions</li>
+                            </ul>
+                        </p> -->
+                    </div>
+                </a>
+
+
+                {# Footer with link to course page #}
+                <div class="card-footer d-flex justify-content-end">
+
+                    <!-- Message icon -->
+                    <a href="{% url 'hoos_study_app:course_group' course.id %}#messages" class="text-decoration-none link-secondary" title="{{ course.mnemonic }} {{ course.number }} - Messages">
+                        <i class="bi bi-chat-right-text-fill fs-5"></i>
+                    </a>
+
+                    <!-- Calendar icon (for study sessions) -->
+                    <a href="{% url 'hoos_study_app:course_group' course.id %}#study-sessions" class="text-decoration-none link-secondary ms-4" title="{{ course.mnemonic }} {{ course.number }} - Study Sessions">
+                        <i class="bi bi-calendar-event-fill fs-5"></i>
+                    </a>
+                    
+                    <!-- Hoos icon -->
+                    <a href="{% url 'hoos_study_app:course_group' course.id %}#hoos" class="text-decoration-none link-secondary ms-4" title="{{ course.mnemonic }} {{ course.number }} - Hoos">
+                        <i class="bi bi-people-fill fs-5"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    {% empty %}
+        <p>You have not joined any courses.</p>
+    {% endfor %}
+</div>
+
+<!-- Change Background Modal -->
+
+<div class="modal fade" id="changeBackgroundModal" tabindex="-1" aria-labelledby="changeBackgroundModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeBackgroundModalLabel">Change Background</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url 'hoos_study_app:change_background' %}" id="changeBackgroundForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        {% for image in images %}
+                        <div class="col-xl-4 col-lg-6 col-12 mb-4">
+                            <img src="{% static 'hoos_study_app/img/card_backgrounds/' %}{{ image }}" 
+                                 class="selectable-image border border-5 border-light-subtle"
+                                 data-image="{{ image }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="background_image" id="selectedImageInput">
+                    <input type="hidden" name="course_id" id="courseIdInput">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" form="changeBackgroundForm" class="btn btn-primary" id="saveChangesBtn" disabled>Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Handle course ID for the modal
+        const changeBackgroundButtons = document.querySelectorAll(".change-background-btn");
+        const courseIdInput = document.getElementById("courseIdInput");
+        const selectableImages = document.querySelectorAll(".selectable-image");
+        const selectedImageInput = document.getElementById("selectedImageInput");
+        const saveChangesBtn = document.getElementById("saveChangesBtn");
+    
+        // Update course ID in the modal
+        changeBackgroundButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                const courseId = button.getAttribute("data-course-id");
+                courseIdInput.value = courseId; // Set course ID in hidden input
+            });
+        });
+    
+        // Handle image selection in the modal
+        selectableImages.forEach(image => {
+            image.addEventListener("click", () => {
+                // Reset all images
+                selectableImages.forEach(img => {
+                    img.classList.remove("border-primary");
+                    img.classList.add("border-light-subtle");
+                });
+    
+                // Highlight the clicked image with border-primary
+                image.classList.remove("border-light-subtle");
+                image.classList.add("border-primary");
+    
+                // Update hidden input with the selected image
+                selectedImageInput.value = image.getAttribute("data-image");
+    
+                // Enable the Save Changes button
+                saveChangesBtn.disabled = false;
+            });
+        });
+
+        // Reset the modal when dismissed
+        changeBackgroundModal.addEventListener("hidden.bs.modal", () => {
+            // Reset all images to border-success
+            selectableImages.forEach(img => {
+                img.classList.remove("border-primary");
+                img.classList.add("border-light-subtle");
+            });
+
+            // Clear the hidden input and disable the save button
+            selectedImageInput.value = "";
+            saveChangesBtn.disabled = true;
+        });
+    });
+</script>
+
+{% endblock content %}
+        
+<!-- {% for course in courses %}
+<div class="col-md-4 col-sm-6 mb-4">
+    <div class="card h-100 shadow-sm">
+        {# Course header with color and title #}
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title m-0">{{ course.mnemonic }} {{ course.number }}</h5>
+        </div>
+        
+        {# Body with course details #}
+        <div class="card-body">
+            <h6 class="card-subtitle text-muted mb-2">{{ course.title }}</h6>
+            <p class="card-text">
+                <strong>Term:</strong> Fall 2024<br>
+                <strong>Section:</strong> {{ course.id }}<br>
+                <strong>Unread Notifications:</strong> 1 {# Placeholder for notifications count #}
+            </p>
+        </div>
+        
+        {# Footer with link to course page #}
+        <div class="card-footer">
+            <a href="{% url 'hoos_study_app:course_group' course.id %}" class="btn btn-primary w-100">View Course</a>
+        </div>
+    </div>
+</div>
+{% empty %}
+<p>You have not joined any courses.</p>
+{% endfor %} -->
+        
+    
+

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}All Documents{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My Documents</h2>
+<!--    <a href="{% url 'hoos_study_app:upload' %}" class="btn btn-success btn-sm">-->
+<!--        Upload File-->
+<!--    </a>-->
+</div>
+
+<p>Welcome, {{ user.first_name }}! Here are your documents.</p>
+
+<!-- Search Bar -->
+<form method="get" action="{% url 'hoos_study_app:documents' %}" class="mb-3 d-flex">
+    <input type="text" name="q" placeholder="Search documents..." class="form-control me-2"
+            value="{{ request.GET.q }}">
+    <button type="submit" class="btn btn-primary btn-sm"style="background-color: #FF8200; border-color:#FF8200">Search</button>
+</form>
+
+<!-- Documents Table -->
+<table class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th scope="col" style="width: 20%; color: #004b5b; ">File</th>
+            <th scope="col" style="width: 15%; color: #004b5b;">Class</th>
+            <th scope="col" style="width: 30%; color: #004b5b;">Description</th>
+            <th scope="col" style="width: 15%; color: #004b5b;">Creation Time</th>
+            <th scope="col" style="width: 15%; color: #004b5b;">Keywords</th>
+            <th scope="col" style="width: 5%; color: #004b5b;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for document in documents %}
+        <tr>
+            <td>{{ document.filename }}</td>
+            <td>{{ document.course }}</td>
+            <td class="text-wrap">{{ document.description }}</td>
+            <td>{{ document.create_time }}</td>
+            <td>
+                {% for keyword in document.keywords.all %}
+                    {{ keyword.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    None
+                {% endfor %}
+            </td>
+            <td class="d-flex flex-column align-items-center">
+                <a href="{{ document.file.url }}" class="btn btn-primary btn-sm mb-2" target="_blank">
+                    View
+                </a>
+                <form method="POST" action="{% url 'hoos_study_app:delete_document' document.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

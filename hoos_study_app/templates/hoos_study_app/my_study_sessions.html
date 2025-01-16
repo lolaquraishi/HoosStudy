@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+ {% load bootstrap5 %}
+
+<!--https://getbootstrap.com/docs/5.0/components/card/-->
+
+{% block content %}
+
+
+
+ <h2> My Study Sessions </h2>
+
+ {% if study_sessions %}
+ <ul>
+  {% for session in study_sessions %}
+  <li>
+   <strong>{{ session.title }}</strong> <br>
+
+  </li>
+
+
+{% endfor %}
+ </ul>
+{% else %}
+<p> WILL CONNECT TO EVENTS WHERE USER HAS GIVEN THEIR AVAILABILITY </p>
+{% endif %}
+
+
+
+
+
+
+
+
+{% endblock %}

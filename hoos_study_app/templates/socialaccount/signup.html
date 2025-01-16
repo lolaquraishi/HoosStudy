@@ -1,0 +1,84 @@
+{% extends "login_signup_base.html" %}
+{% load allauth %}
+
+{% block title %} Sign Up {% endblock title %}
+
+{% block content %}
+
+<h1 class="display-4 fw-bold mb-4">You're almost there!</h1>
+<div class="mb-4">
+    <span class="">You are about to sign up for HoosStudy using your {{account.get_provider.name}} account <span class="fw-bolder">{{ form.email.value }}</span>.</span>
+    <span class="">As a final step, please complete the following form:</span>
+</div>
+
+
+<form class="" method="post" action="{% url 'socialaccount_signup' %}">
+    {% csrf_token %}
+    {{ form.non_field_errors }} <!-- Display non-field form errors -->
+    <input type="hidden" name="email" value="{{ form.email.value }}">
+
+    <div class="mb-3">
+        <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+        <input type="text" name="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" value="{{ form.username.value }}">
+        <!-- Display username field errors -->
+        {% if form.username.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.username.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <div class="row mb-3">
+        <div class="col">
+            <label for="{{ form.first_name.id_for_label }}" class="form-label">{{ form.first_name.label }}</label>
+            <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" value="{{ form.first_name.value }}">
+            
+            {% if form.first_name.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.first_name.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="col">
+            <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+            <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" value="{{ form.last_name.value }}">
+            
+            {% if form.last_name.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.last_name.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="{{ form.year.id_for_label }}" class="form-label">Academic Year</label>
+        <select class="form-select {% if form.year.errors %}is-invalid{% endif %}" name="year" id="{{ form.year.id_for_label }}" role="button">
+            <option selected value="">Select your year</option>
+            {% for key, value in form.year.field.choices %}
+                {% if key %}
+                    <option value="{{ key }}" {% if form.year.value == key %}selected{% endif %}>{{ value }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        {% if form.year.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.year.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+    
+    {{ redirect_field }} <!-- Hidden field for redirect URL -->
+    <button class="btn btn-primary btn-lg mt-2" style="width: 100%;" type="submit">Sign Up!</button>
+</form>
+
+
+{% endblock content %}

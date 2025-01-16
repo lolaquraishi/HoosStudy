@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Study Sessions{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Study Sessions</h1>
+    
+    <ul class="list-group">
+        {% for session in study_sessions %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <!-- Study Session Name -->
+                <span>{{ session.name }}</span>
+                <!-- Study Session Owner -->
+                <span class="text-muted">Owner: {{ session.owner.username }}</span>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">No study sessions available.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load bootstrap5 %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    input[type="checkbox"]:hover {
+        outline: 2px solid #FF8200;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 800px;
+    }
+
+    .card-header {
+        background-color: #232D4B;
+        padding: 30px 0;
+    }
+
+    .card-header h2 {
+        font-size: 1.8rem;
+        color: #ffffff;
+    }
+
+    .card-body {
+        padding: 30px;
+        background-color: #F9F9F9;
+    }
+
+    .card-body p,
+    .card-body label,
+    .card-body input,
+    .card-body select,
+    .card-body textarea {
+        color: #004b5b;
+    }
+
+    .card-body strong {
+        color: #004b5b;
+    }
+
+    .alert {
+        font-size: 1.2rem;
+    }
+
+    #checkbox-container {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px; /* Optional for rounded corners */
+    }
+
+    input[type="submit"] {
+        background-color: #FF8200;
+        border: none;
+        width: 50%;
+        color: #ffffff;
+        font-size: 1rem;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    input[type="submit"]:hover {
+        background-color: #cc6a00;
+        cursor: pointer;
+    }
+
+    .btn-outline-light {
+        background-color: #232D4B;
+        color: #ffffff;
+        width: 50%;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .btn-outline-light:hover {
+        background-color: #1e2940;
+    }
+</style>
+
+<div class="container my-5 d-flex justify-content-center">
+    <div class="card border-0 shadow">
+        <div class="card-header text-white text-center">
+            <h2 class="mb-0">
+                Availability for <strong>{{ session.name }}</strong>
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <p class="text-center mb-4" style="color: #004b5b;">
+                <strong>Course:</strong> {{ session.course_name }} <br>
+                <strong>Date:</strong> {{ session.date|date:"M. d, Y" }} <br>
+                <strong>Location:</strong> {{ session.location_name }}
+            </p>
+
+            {% if submitted %}
+                <div class="alert alert-success text-center">
+                    Your availability has been submitted! Thank you.
+                </div>
+
+                <div class="d-flex flex-column align-items-center mt-4">
+                    <a href="{% url 'hoos_study_app:study_session_dashboard' course_id=course_id session_id=session.id %}"
+                       class="btn btn-outline-light">
+                        Go Back to Study Session
+                    </a>
+                </div>
+            {% else %}
+                <form action="" method="POST" class="needs-validation">
+                    {% csrf_token %}
+
+                    <div class="form-group mb-3">
+                        <div id="checkbox-container">
+                            {{ form.as_p }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-4">
+                        <input type="submit" value="Submit" class="btn btn-primary">
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

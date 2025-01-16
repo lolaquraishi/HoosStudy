@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Files{% endblock %}
+
+{% block content %}
+<div class="container my-5 d-flex justify-content-center">
+    <div class="card border-0 shadow" style="width: 100%; max-width: 600px;">
+        <div class="card-header text-white text-center" style="background-color: #232D4B; padding: 20px 0;">
+            <h2 class="mb-0">Upload Files</h2>
+        </div>
+
+        <div class="card-body p-4" style="background-color: #F9F9F9;">
+            <form method="POST" enctype="multipart/form-data" class="needs-validation">
+                {% csrf_token %}
+
+                <div class="form-group mb-3">
+                    <label for="filename" class="form-label text-dark">Name</label>
+                    {{ form.filename }}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="file" class="form-label text-dark">{{ form.file.label }}</label>
+                    {{ form.file }}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="course" class="form-label text-dark">{{ form.course.label }}</label>
+                    {{ form.course }}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="description" class="form-label text-dark">{{ form.description.label }}</label>
+                    {{ form.description }}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="keywords" class="form-label text-dark">{{ form.keywords.label }}</label>
+                    {{ form.keywords }}
+                </div>
+
+                {% if form.file.errors %}
+                    <div class="alert alert-danger">
+                        {{ form.file.errors }}
+                    </div>
+                {% endif %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="d-flex flex-column align-items-center mt-4">
+                    <input type="submit" value="Upload" class="btn btn-primary btn-outline-light mb-3" 
+                           style="background-color: #FF8200; border: none; width: 50%;">
+                    <a href="{% url 'hoos_study_app:documents' %}" class="btn btn-outline-light" 
+                       style="background-color: #232D4B; color: white; width: 50%;">
+                        Back to View All Documents
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

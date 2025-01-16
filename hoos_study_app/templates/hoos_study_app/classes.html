@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}HoosStudy Class List{% endblock %}
+
+{% block content %}
+
+<h1>Class List</h1>
+
+<div class="d-flex flex-column gap-4 pt-4 align-items-center justify-content-center">
+    <!-- Search bar -->
+    <div class="position-relative w-100">
+        <i class="bi bi-search position-absolute" style="top: 50%; left: 15px; transform: translateY(-50%); font-size: 1.2em;"></i>
+        <input type="text" id="searchInput" class="form-control ps-5 pe-5" placeholder="Search for a course..." onkeyup="filterList()">
+        <i id="clearIcon" class="bi bi-x-lg position-absolute" style="display: none; top: 50%; right: 15px; transform: translateY(-50%); cursor: pointer;" onclick="clearSearch()"></i>
+    </div>
+    
+    <!-- Class list -->
+    <div class="list-group overflow-y-scroll w-100" style="height: calc(100vh - 270px);" id="courseList">
+        {% if class_list %}
+            {% for course in class_list %}
+                <div class="list-group-item d-flex w-100 align-items-center justify-content-between">
+                    <div class="">
+                        <h6 id="courseMnemonic" class="mb-0">{{ course.mnemonic }} {{ course.number }}</h6>
+                        <p id="courseTitle" class="mb-0 text-muted">{{ course.title }}</p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        {% if request.user in course.students.all %}
+                            <a href="{% url 'hoos_study_app:course_group' course.pk %}" 
+                               class="btn btn-primary btn-outline-light" 
+                               style="background-color: #FF8200; border: none;">
+                                Joined!
+                            </a>
+                        {% else %}
+                            <!-- User has not joined; show Join Group button -->
+                            <form class="mb-0" action="{% url 'hoos_study_app:join_course_group' course.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-success">Join Group</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3" aria-current="true">
+                <div class="d-flex gap-2 w-100 justify-content-between">
+                    <div>
+                        <h6 class="mb-0">No classes exist at the moment.</h6>
+                    </div>
+                </div>
+            </a> -->
+        {% endif %}
+    </div>
+
+    <!-- No results message, initially hidden -->
+    <div id="noResultsMessage" class="text-center text-muted" style="display: none;">
+        <div class="mb-3">
+            <i class="bi bi-emoji-frown" style="font-size: 5rem;"></i>
+        </div>
+        <h2>Sorry, no classes found!</h2>
+        <p>Please check the spelling or try searching for another class.</p>
+        
+    </div>
+</div>
+
+
+    
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        filterList();
+    }
+
+    function filterList() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const items = document.querySelectorAll('#courseList .list-group-item');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        const courseList = document.getElementById('courseList');
+
+        // Show the "x" icon only if there's text in the input
+        const clearIcon = document.getElementById('clearIcon');
+        if (input.length > 0) {
+            clearIcon.style.display = 'block';
+        } else {
+            clearIcon.style.display = 'none';
+        }
+
+        // Track if any items match the search
+        let anyVisible = false;
+
+        items.forEach(item => {
+            const mnemonic = item.querySelector('#courseMnemonic').textContent.toLowerCase();
+            const title = item.querySelector('#courseTitle').textContent.toLowerCase();
+            if (mnemonic.includes(input) || title.includes(input)) {
+                // Show item
+                item.style.display = ''; // Resets display to inherit CSS rules
+                item.classList.add('d-flex');
+                anyVisible = true;
+            } else {
+                // Hide item
+                item.classList.remove('d-flex');
+                item.style.display = 'none';
+            }
+        });
+
+        // Show or hide the no results message based on matches
+        console.log(anyVisible);
+        // Show or hide the course list and the no results message
+        if (anyVisible) {
+            courseList.style.display = ''; // Show the course list
+            noResultsMessage.style.display = 'none'; // Hide the no results message
+        } else {
+            courseList.style.display = 'none'; // Hide the course list
+            noResultsMessage.style.display = 'block'; // Show the no results message
+        }
+    }
+</script>
+{% endblock %}
+

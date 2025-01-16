@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+ {% load bootstrap5 %}
+
+<!--https://getbootstrap.com/docs/5.0/components/card/-->
+
+{% block content %}
+
+
+
+ <h2> Add a Study Location to the Database</h2>
+ <br/> <br/>
+
+ {% if submitted%}
+   Your location was submitted and added to our Database! Yay!
+
+ {% else %}
+  <form action ="" method="POST">
+   {% csrf_token %}
+
+   {{ form.as_p }}
+
+   <input type = "submit" value="Submit" class = "btn btn-secondary">
+  </form>
+
+
+ {% endif %}
+
+
+
+
+
+
+
+{% endblock %}

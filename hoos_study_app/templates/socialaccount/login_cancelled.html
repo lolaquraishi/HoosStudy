@@ -1,0 +1,17 @@
+{% extends "login_signup_base.html" %}
+{% load allauth %}
+
+{% block title %} Login Cancelled {% endblock title %}
+
+{% block content %}
+
+<h1 class="display-4 fw-bold mb-4">Login Cancelled</h1>
+<span class="">You decided to cancel logging in to our site. If this was a mistake, please proceed to
+    <a class="icon-link icon-link-hover" href="{% url 'account_login' %}">
+        sign in
+        <i class="bi bi-arrow-right"></i>
+    </a>
+    .
+</span>
+
+{% endblock content %}

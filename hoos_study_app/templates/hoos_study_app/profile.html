@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+{% load socialaccount %}
+{% load static %}
+
+<style>
+  .profile-picture-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    width: 200px; /* Match the size of the profile picture */
+    height: 200px; /* Match the size of the profile picture */
+  }
+
+  .profile-picture-container img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%; /* Make the profile picture circular */
+    transition: opacity 0.3s ease;
+  }
+
+  .profile-picture-container:hover img {
+    opacity: 0.7;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%; /* Make the overlay circular */;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  .profile-picture-container:hover .overlay {
+    opacity: 1;
+  }
+
+  .selectable-image {
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+    transition: transform 0.3s;
+  }
+
+  .selectable-image:hover {
+    transform: scale(1.1);
+  }
+
+  .btn-danger {
+    white-space: nowrap;
+    min-width: 120px; /* Ensures enough width for "Leave Class" */
+    text-align: center;
+  }
+</style>
+
+
+  <div class="row">
+    <div class="col-xl-4">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">Profile Picture</div>
+        <div class="card-body py-4 text-center">
+          <!-- Profile picture with hover overlay -->
+          <div class="profile-picture-container position-relative " data-bs-toggle="modal" data-bs-target="#profilePictureModal">
+            <img id="profile-picture"
+                 class="rounded-circle mb-2"
+                 src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% endif %}"
+                 style="width: 200px; height: 200px; object-fit: cover;"
+                 >
+            <div class="overlay d-flex flex-column justify-content-center align-items-center">
+              <i class="bi bi-camera" style="font-size: 2rem;"></i>
+              <span class="fs-6">Change Picture</span>
+            </div>
+          </div>
+
+          <!-- Profile picture errors -->
+          <div class="form-text text-danger">
+            {% for error in picture_form.profile_picture.errors %}
+              {{ error }}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">Account Creation</div>
+        <div class="card-body py-4 text-center">
+            <p>Created On: {{ creation_date|date:"M. j, Y, \\a\\t g:i a" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-8">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">Account Details</div>
+        <div class="card-body py-4">
+          <form method="post" class="mb-0" novalidate>
+              {% csrf_token %}
+              <!-- Username -->
+              <div class="mb-3">
+                <label class="small mb-1" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                <input
+                  class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                  id="{{ form.username.id_for_label }}" type="text" name="username"
+                  placeholder="Enter your username" value="{{ form.username.value }}"
+                >
+                {% if form.username.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.username.errors %}
+                      <p>{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="row gx-3 mb-3">
+                <!-- First Name -->
+                <div class="col-md-6">
+                    <label class="small mb-1" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                    <input
+                      class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
+                      id="{{ form.first_name.id_for_label }}" type="text" name="first_name"
+                      placeholder="Enter your first name" value="{{ form.first_name.value }}"
+                    >
+                    {% if form.first_name.errors %}
+                      <div class="invalid-feedback">
+                        {% for error in form.first_name.errors %}
+                          <p>{{ error }}</p>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                </div>
+                <!-- Last Name -->
+                <div class="col-md-6">
+                  <label class="small mb-1" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                  <input
+                    class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
+                    id="{{ form.last_name.id_for_label }}" type="text" name="last_name"
+                    placeholder="Enter your last name" value="{{ form.last_name.value }}"
+                  >
+                  {% if form.last_name.errors %}
+                    <div class="invalid-feedback">
+                      {% for error in form.last_name.errors %}
+                        <p>{{ error }}</p>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Email address (for display only, cannot change) -->
+              <div class="mb-3">
+                <label class="small mb-1" for="email_display">Email address</label>
+                <input
+                  class="form-control" id="email_display" type="email"
+                  value="{{ user.email }}"
+                  disabled
+                >
+                {% if form.email.errors %}
+                  <div class="invalid-feedback">
+                    {% for error in form.email.errors %}
+                      <p>{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Select year -->
+              <div class="mb-3">
+                <label class="small mb-1" for="{{ form.year.id_for_label }}">Academic Year</label>
+                <select class="form-select {% if form.year.errors %}is-invalid{% endif %}" name="year" id="{{ form.year.id_for_label }}" role="button" >
+                  {% for key, value in form.year.field.choices %}
+                    {% if key %}
+                      <option value="{{ key }}" {% if form.year.value == key %}selected{% endif %}>{{ value }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+                {% if form.year.errors %}
+                  <div class="invalid-feedback">
+                      {% for error in form.year.errors %}
+                          <p>{{ error }}</p>
+                      {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <button class="btn btn-primary mt-2" type="submit" name="account_details_update">Save changes</button>
+          </form>
+        </div>
+      </div>
+
+    <div class="card mb-4 shadow-sm">
+    <div class="card-header">
+        Classes
+        {% if user.is_pma_admin %}
+            <span class="badge rounded-pill text-bg-primary ms-1">PMA Admin</span>
+        {% endif %}
+    </div>
+    <div class="card-body py-3">
+        <ul class="list-group">
+            {% for course in user.courses.all %}
+                <li class="list-group-item d-flex align-items-center p-2 border rounded mb-2">
+                    <div class="d-flex align-items-center w-100">
+                        <a href="{% url 'hoos_study_app:course_group' course.pk %}" class="text-decoration-none text-dark w-100 d-flex align-items-center">
+                            <i class="bi bi-chevron-right me-2"></i>
+                            <span class="fs-6 fw-semibold">{{ course }}</span>
+                        </a>
+                    </div>
+                    <!-- Leave Class Button in Separate Column -->
+                    <form action="{% url 'hoos_study_app:leave_course_group' course.id %}" method="post" class="ms-3">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-sm">Leave Class</button>
+                    </form>
+                </li>
+            {% empty %}
+                <li class="list-group-item text-muted">You have not joined any courses.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+
+
+      {% if not user.is_pma_admin %}
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+          Study Sessions You Own
+        </div>
+        <div class="card-body py-4 text-center">
+          <ul class="list-group list-group-flush">
+            {% for session in user.owned_sessions.all %}
+              <li class="list-group-item d-flex align-items-center p-2 border rounded mb-2">
+                    <div class="d-flex align-items-center w-100">
+                        <a href="{% url 'hoos_study_app:study_session_dashboard' session.course_name.id session.id %}" class="text-decoration-none text-dark w-100 d-flex align-items-center">
+                            <i class="bi bi-chevron-right me-2"></i>
+                            <span class="fs-6 fw-semibold">{{ session.name }}</span>
+                        </a>
+                    </div>
+                    <!-- Leave Class Button in Separate Column -->
+                    <form method="POST" action="{% url 'hoos_study_app:delete_study_session' session.pk %}">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </li>
+            {% empty %}
+              <li class="list-group-item text-muted">You have not created any study sessions.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+          Study Sessions You Joined
+        </div>
+        <div class="card-body py-4 text-center">
+          <ul class="list-group list-group-flush">
+            {% for session in user.study_session.all %}
+              <li class="list-group-item d-flex align-items-center p-2 border rounded mb-2">
+                    <div class="d-flex align-items-center w-100">
+                        <a href="{% url 'hoos_study_app:study_session_dashboard' session.course_name.id session.id %}" class="text-decoration-none text-dark w-100 d-flex align-items-center">
+                            <i class="bi bi-chevron-right me-2"></i>
+                            <span class="fs-6 fw-semibold">{{ session.name }}</span>
+                        </a>
+                    </div>
+                    <form method="POST" action="{% url 'hoos_study_app:leave_study_session' session.pk %}">
+                        {% csrf_token %}
+                        <button class="btn btn-danger btn-sm">Leave</button>
+                    </form>
+                </li>
+            {% empty %}
+              <li class="list-group-item text-muted">You have not joined any study sessions.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+
+
+    </div>
+  </div>
+
+
+<div class="modal fade" id="profilePictureModal" tabindex="-1" aria-labelledby="profilePictureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="profilePictureModalLabel">Change Profile Picture</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-3" id="profilePictureTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="default-tab" data-bs-toggle="tab" data-bs-target="#defaultTabContent" type="button" role="tab" aria-controls="defaultTabContent" aria-selected="true">
+              Choose Default
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#uploadTabContent" type="button" role="tab" aria-controls="uploadTabContent" aria-selected="false">
+              Upload Your Own
+            </button>
+          </li>
+        </ul>
+
+
+        <div class="tab-content" id="profilePictureTabContent">
+          <!-- Default Pictures Tab -->
+          <div class="tab-pane fade show active" id="defaultTabContent" role="tabpanel" aria-labelledby="default-tab">
+            <form id="defaultPictureForm" method="post">
+              {% csrf_token %}
+              <div class="row overflow-y-auto" style="height: 14rem;">
+                {% for picture in default_pictures %}
+                <div class="col-sm-3 col-4 my-2 d-flex justify-content-center align-items-center">
+                  <img src="{% get_media_prefix %}profile_pictures/default_profile_pictures/{{ picture }}"
+                       class="selectable-image border border-5 border-light-subtle rounded-circle"
+                       data-picture="{{ picture }}">
+                </div>
+                {% endfor %}
+              </div>
+              <input type="hidden" id="selectedDefaultPicture" name="selected_default_picture">
+              <button type="submit" name="select_default" class="btn btn-primary mt-3">Confirm</button>
+            </form>
+          </div>
+
+          <!-- Upload Picture Tab -->
+          <div class="tab-pane fade" id="uploadTabContent" role="tabpanel" aria-labelledby="upload-tab">
+            <form id="uploadPictureForm" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="mb-3 text-center">
+                <div id="profilePicturePreviewContainer" class="mb-3 text-center d-none">
+                  <img id="profilePicturePreview" src="#" alt="Profile Picture Preview" class="img-fluid rounded-circle" style="width: 200px; height: 200px; object-fit: cover;">
+                </div>
+                {{ upload_picture_form.profile_picture }}
+              </div>
+              <button type="submit" name="upload_picture" class="btn btn-primary">Confirm</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const selectableImages = document.querySelectorAll(".selectable-image");
+    const hiddenInput = document.getElementById('selectedDefaultPicture');
+
+    // Handle image selection in the modal
+    selectableImages.forEach(image => {
+      image.addEventListener("click", () => {
+        // Reset all images
+        selectableImages.forEach(img => {
+            img.classList.remove("border-primary");
+            img.classList.add("border-light-subtle");
+        });
+
+        // Highlight the clicked image with border-primary
+        image.classList.remove("border-light-subtle");
+        image.classList.add("border-primary");
+
+        // Update hidden input with the selected image
+        hiddenInput.value = image.getAttribute("data-picture");
+        console.log(hiddenInput.value);
+      });
+    });
+
+    const fileInput = document.querySelector('#id_profile_picture');
+    const previewContainer = document.querySelector('#profilePicturePreviewContainer');
+    const previewImage = document.querySelector('#profilePicturePreview');
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+
+      if (file) {
+        // Preview the image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImage.src = e.target.result;
+          previewContainer.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+  });
+</script>
+{% endblock %}
+
+{% endblock %}

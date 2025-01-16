@@ -1,0 +1,3 @@
+#profile-picture-dropdown .nav-link.dropdown-toggle::after {
+    display: none;
+}

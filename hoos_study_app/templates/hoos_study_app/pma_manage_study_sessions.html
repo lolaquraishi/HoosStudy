@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Study Sessions{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Manage Study Sessions</h1>
+    {% for study_session in study_sessions %}
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #7b8193; color: #000;">
+                <h5 class="mb-0">{{ study_session.name }}</h5>
+                <form method="POST" action="{% url 'hoos_study_app:pma_delete_study_session' study_session.id %}" class="ms-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </div>
+
+            <div class="card-body py-3">
+                <p class="mb-1"><strong>Course:</strong> {{ study_session.course_name }}</p>
+                <p class="mb-1"><strong>Date:</strong> {{ study_session.date|date:"M d, Y" }}</p>
+                <p class="mb-1"><strong>Created By:</strong> {{ study_session.created_by }}</p>
+                <p class="mb-1"><strong>Owner:</strong> {{ study_session.owner.username }}</p>
+
+                <!-- Collapsible Section for Details -->
+                <button class="btn btn-link text-primary p-0 mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ study_session.id }}">
+                    View Details
+                </button>
+                <div class="collapse mt-2" id="details-{{ study_session.id }}">
+                    <p class="mb-1"><strong>Description:</strong> {{ study_session.description }}</p>
+                    <p class="mb-1"><strong>Location:</strong> {{ study_session.location_name }}</p>
+                    <p class="mb-1"><strong>Room Number:</strong> {{ study_session.room_number }}</p>
+                    <p class="mb-1"><strong>Location Description:</strong> {{ study_session.description_of_location }}</p>
+                </div>
+            </div>
+
+            <div class="card-footer bg-light py-2">
+                <h6 class="mb-2">Documents</h6>
+                <ul class="list-group list-group-flush">
+                    {% for document in study_session.document_set.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <strong>{{ document.filename }}</strong> - {{ document.description }}
+                                <a href="{{ document.file.url }}" class="text-primary ms-2">Download</a>
+                            </span>
+                            <form method="POST" action="{% url 'hoos_study_app:delete_document' document.id %}?from_pma=true">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                            <!-- <form method="POST" action="{% url 'hoos_study_app:delete_document' document.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form> -->
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No documents available for this study session.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% empty %}
+        <div class="alert alert-info">No study sessions available.</div>
+    {% endfor %}
+</div>
+{% endblock %}

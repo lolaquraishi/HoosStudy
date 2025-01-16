@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% load filters %}
+
+{% block title %}Study Session Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+    }
+
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr; /* Big box on the left, smaller boxes stacked on the right */
+        gap: 20px;
+        height: 100vh;
+        box-sizing: border-box;
+    }
+    
+    .dashboard-container.user-view {
+        grid-template-rows: 1fr 1fr; /* Two rows on the right */
+    }
+    
+    .dashboard-container.owner-view {
+        grid-template-rows: 1fr 1fr 1fr; /* Three rows on the right */
+    }
+
+    .details-box {
+        grid-column: 1 / 2; /* Left column */
+        grid-row: 1 / 4; /* Spans both rows */
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .scrolling-box {
+        background-color: #232d4b;
+        color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .scrolling-box h3 {
+        margin-top: 0;
+        text-align: center;
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .scrolling-content {
+        flex: 1;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+        max-height: calc(100% - 30px); /* Prevents content from spilling out */
+    }
+
+    .scrolling-content ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .scrolling-content ul li {
+        padding: 10px;
+        margin: 5px 0;
+        background-color: #344a73;
+        border-radius: 4px;
+    }
+
+    .scrolling-content ul li:hover {
+        background-color: #445b8a;
+    }
+
+    .scrolling-content ul li a {
+        color: #ff8200;
+        text-decoration: none;
+    }
+
+    /* Add spacing between the two scrolling boxes */
+    .scrolling-documents {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+    }
+
+    .scrolling-attendees {
+        grid-column: 2 / 3;
+        grid-row: 2 / 3;
+    }
+
+    /* Requests Scrolling Box */
+    .scrolling-requests {
+        grid-column: 2 / 3;
+        grid-row: 3 / 4; /* Place it as the third box in the right column */
+    }
+
+
+    /* Auto-scroll animation */
+    @keyframes autoScroll {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-100%); }
+    }
+
+    .scrolling-content.auto-scrolling ul {
+        animation: autoScroll 15s linear infinite;
+    }
+
+    .scrolling-content.auto-scrolling ul:hover {
+        animation-play-state: paused;
+    }
+
+
+
+    .when-to-meet table {
+        table-layout: fixed;
+        max-width: 50%;
+    }
+
+    .when-to-meet th, .when-to-meet td {
+        color: #004b5b;
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        padding: 12px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .when-to-meet th:first-child {
+        width: 200px;
+    }
+
+    .when-to-meet th:nth-child(2), .when-to-meet th:nth-child(2) {
+        width: 100px;
+    }
+
+    .when-to-meet th, .when-to-meet td {
+        height: 50px;
+        text-align: center;
+        vertical-align: middle;
+        overflow: hidden;
+        word-wrap: break-word;
+    }
+
+    .when-to-meet .bg-success-custom {
+        background-color: #79d279
+    }
+
+    .when-to-meet .bg-danger-custom {
+        background-color: #ff6666
+    }
+
+    .user-availability-col {
+        width: 100px;
+
+    }
+
+    .session-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+
+    }
+
+    .scroll-box{
+        max-height: 50vh;
+        max-width: 100%;
+        overflow: auto;
+        width: auto;
+    }
+
+
+
+
+    </style>
+
+    <!-- <input type="button" value="Back to Course" class="btn btn-primary btn-outline-light mb-3" 
+       style="background-color: #FF8200; border: none;" 
+       onclick="window.location.href='/course/{{ course.id }}';"> -->
+    
+    <div class="d-flex justify-content-between mb-4">
+        <!-- Back to Course Button -->
+        <input type="button" value="Back to Course" class="btn btn-primary btn-outline-light mb-3" 
+               style="background-color: #FF8200; border: none;" 
+               onclick="window.location.href='/course/{{ course.id }}';">
+    
+        <!-- Upload Files Button -->
+        {% if not user.is_pma_admin %}
+        <input type="button" value="Upload Files" class="btn btn-primary btn-outline-light mb-3" 
+               style="background-color: #FF8200; border: none;" 
+               onclick="window.location.href='/course/{{ course.id }}/{{ study_session.id }}/upload';">
+        {% endif %}
+    </div>
+
+    <div class="dashboard-container {% if request.user == study_session.owner %}owner-view{% else %}user-view{% endif %}">
+
+        <!-- Study Session Details -->
+        <div class="details-box">
+            <!-- Flexbox Header -->
+            <div class="details-header d-flex justify-content-between align-items-center mb-3" style="display: flex; justify-content: space-between; align-items: center;">
+                <!-- Course Name -->
+                <h2 style="margin: 0;">{{ study_session.name }}</h2>
+        
+                <!-- When2Meet Button -->
+<!--                <input type="button" value="Add Availability" class="btn btn-primary btn-outline-light" -->
+<!--                       style="background-color: #FF8200; border: none; padding: 5px 15px; font-size: 14px;" -->
+<!--                       onclick="window.location.href='/availability/{{ study_session.id }}';">-->
+            </div>
+        
+            <!-- Study Session Details -->
+            <p><strong>Date:</strong> {{ study_session.date|date:"M. d, Y" }}</p>
+            <p><strong>Created By:</strong> {{ study_session.created_by }}</p>
+            <p><strong>Description:</strong> {{ study_session.description }}</p>
+            <p><strong>Location:</strong> {{ study_session.location_name }}</p>
+            <p><strong>Room Number:</strong> {{ study_session.room_number }}</p>
+            <p><strong>Location Description:</strong> {{ study_session.description_of_location }}</p>
+
+            <div class="scroll-box">
+        <div class="overflow-auto when-to-meet">
+            <table class="table table-bordered table-responsive-sm">
+                <thead>
+                    <tr>
+                        <th scope="col">Time Slots</th>
+                        <th scope="col">Total Available</th>
+                        {% for availability in data.availabilities %}
+                            <th scope="col" class="user-availability-col">{{ availability.user_name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for time_slot in time_slots %}
+                    <tr>
+                        <td>{{ time_slot }}</td>
+                        <td>{{ data.availabilities|filter_count_study_session:time_slot }}</td>
+                        {% for availability in data.availabilities %}
+                            <td class="{% if time_slot in availability.time_slots %} bg-success-custom {% else %} bg-danger-custom {% endif %} text-center">
+                                {% if time_slot in availability.time_slots %}
+                                    &#x2713;
+                                {% else %}
+                                    X
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+        <!-- Documents Scrolling Box -->
+        <div class="scrolling-box scrolling-documents">
+            <h3>Documents</h3>
+            <div class="scrolling-content auto-scrolling">
+                <ul>
+                    {% for document in study_session.document_set.all %}
+                         <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ document.filename }}</strong><br>
+                                <a href="{{ document.file.url }}" class="text-decoration-none text-warning">Download</a><br>
+                                <small>{{ document.description }}</small>
+                            </div>
+                            {% if request.user.is_pma_admin %}
+                                <form method="POST" action="{% url 'hoos_study_app:delete_document' document.pk course_id session_id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link text-danger p-0" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                </button>
+                            {% endif %}
+                        </li>
+                    {% empty %}
+                        <li>No documents available.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Attendees Scrolling Box -->
+        <div class="scrolling-box scrolling-attendees">
+            <h3>Attendees</h3>
+            <div class="scrolling-content auto-scrolling">
+                <ul>
+                    {% for attendee in study_session.attendees.all %}
+                        <li>{{ attendee.username }}</li>
+                    {% empty %}
+                        <li>No attendees yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- REQUESTS Scrolling Box -->
+        {% if request.user == study_session.owner %}
+        <div class="scrolling-box scrolling-requests">
+            <h3>Pending Join Requests</h3>
+            <div class="scrolling-content auto-scrolling">
+                <ul>
+                    {% for request in pending_requests %}
+                        <li class="d-flex justify-content-center justify-content-between">
+                            {{ request.user.first_name }} {{ request.user.last_name }} ({{ request.user.username }})
+                            <div>
+                                <a href="{% url 'hoos_study_app:manage_join_request' request.id 'accept' %}" 
+                                   class="btn btn-success btn-sm">Accept</a>
+                                <a href="{% url 'hoos_study_app:manage_join_request' request.id 'reject' %}" 
+                                   class="btn btn-danger btn-sm">Reject</a>
+                            </div>
+
+                        </li>
+                    {% empty %}
+                        <li>No pending requests.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Buttons Row -->
+    <div class="d-flex justify-content-center my-3">
+        <!-- Add Availability Button -->
+        {% if request.user in study_session.attendees.all and not request.user.is_pma_admin %}
+            <input type="button" value="Add Availability" class="btn btn-primary btn-outline-light mx-2"
+                style="background-color: #FF8200; border: none; padding: 5px 15px; font-size: 14px;"
+                onclick="window.location.href='/availability/{{ study_session.id }}';">
+        {% endif %}
+
+        <!-- Join/Leave Button -->
+        {% if request.user in study_session.attendees.all and not request.user.is_pma_admin %}
+            <!-- Leave Button -->
+            <form method="POST" action="{% url 'hoos_study_app:leave_study_session' study_session.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning mx-2" 
+                        style="padding: 5px 15px; font-size: 14px;">Leave</button>
+            </form>
+        {% elif not request.user.is_pma_admin %}
+            {% if user_has_pending_request %}
+                <!-- Pending Button -->
+                <button class="btn btn-warning mx-2" 
+                        style="padding: 5px 15px; font-size: 14px;" 
+                        disabled>Pending</button>
+            {% else %}
+                <!-- Join Button -->
+                <form method="POST" action="{% url 'hoos_study_app:join_study_session' study_session.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success mx-2" 
+                            style="padding: 5px 15px; font-size: 14px;">Join</button>
+                </form>
+            {% endif %}
+        {% endif %}
+        
+        
+
+        <!-- Delete Button (Visible only if user is the owner) -->
+        {% if request.user == study_session.owner or request.user.is_pma_admin %}
+            <form method="POST" action="{% url 'hoos_study_app:delete_study_session' study_session.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger mx-2" 
+                        style="padding: 5px 15px; font-size: 14px;">Delete</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <script>
+        // Function to stop scrolling on hover and restart when the mouse leaves
+        document.querySelectorAll('.scrolling-content').forEach(box => {
+            box.addEventListener('mouseover', () => {
+                box.classList.remove('auto-scrolling');
+            });
+
+            box.addEventListener('mouseleave', () => {
+                box.classList.add('auto-scrolling');
+            });
+        });
+    </script>
+{% endblock %}

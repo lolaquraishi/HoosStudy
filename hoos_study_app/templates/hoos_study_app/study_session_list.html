@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+ {% load bootstrap5 %}
+{% load filters %}
+
+<!--https://getbootstrap.com/docs/5.0/components/card/-->
+<!--https://www.w3schools.com/charsets/ref_emoji_hands.asp-->
+<!--https://www.w3schools.com/cssref/sel_nth-child.php-->
+
+
+{% block content %}
+<style>
+  .when-to-meet table {
+    table-layout: fixed;
+    max-width: 50%;
+  }
+
+  .when-to-meet th:first-child {
+    width: 200px;
+  }
+
+  .when-to-meet th:nth-child(2), .when-to-meet th:nth-child(2) {
+    width: 100px;
+  }
+
+  .when-to-meet th, .when-to-meet td {
+    height: 50px;
+    text-align: center;
+    vertical-align: middle;
+    overflow: hidden;
+    word-wrap: break-word;
+  }
+
+  .when-to-meet .bg-success-custom {
+    background-color: #79d279
+  }
+
+  .when-to-meet .bg-danger-custom {
+    background-color: #ff6666
+  }
+
+  .user-availability-col {
+  width: 100px;
+
+  }
+
+  .session-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+
+  }
+
+  .scroll-box{
+
+  max-height: 50vh;
+  max-width: 50%;
+  overflow: auto;
+  width: auto;
+
+  }
+
+
+
+</style>
+
+  <h1> Study Sessions </h1>
+
+
+{% for data in session_data %}
+
+<div class="card">
+  <div>
+  <h3 class="card-header">{{data.session}}</h3>
+  </div>
+  <div class="session-container">
+  <div class="card-body">
+    <h5 class="card-title">Course Name: {{ data.session.course_name }}</h5>
+<!--      <p>The current best meeting time is {{ data.best_slot}}  with {{ data.best_slot_count }} people able to attend!</p>-->
+    <p class="card-text">
+    <ul>
+
+    <li><strong> Date: </strong> {{ data.session.date|date:"M. d, Y" }}</li>
+      <li><strong> Organizer: </strong> {{ data.session.created_by }}</li>
+    <li><strong> Description: </strong> {{ data.session.description }}</li>
+    <li><strong> Location: </strong> {{ data.session.location_name }}</li>
+     <li><strong> Room Number: </strong> {{ data.session.room_number }}</li>
+     <li><strong> Location Description: </strong> {{ data.session.description_of_location }}</li>
+
+    </ul>
+
+     <a href="{% url 'hoos_study_app:give-availability' data.session.id %}" class="btn btn-primary">When to Meet</a>
+
+    </p>
+
+  </div>
+  </div>
+
+
+
+<div class="scroll-box">
+<div class="overflow-auto when-to-meet">
+  <table class="table table-bordered table-responsive-sm">
+    <thead>
+      <tr>
+        <th scope="col" >Time Slots</th>
+          <th scope="col">Total Available</th>
+        {% for availability in data.availabilities %}
+          <th scope="col" class="user-availability-col">{{ availability.user_name }}</th>
+        {% endfor %}
+
+      </tr>
+    </thead>
+    <tbody>
+      {% for time_slot in time_slots %}
+      <tr>
+        <td>{{ time_slot }}</td>
+          <td>
+          {{ data.availabilities|filter_count_study_session:time_slot }}
+        </td>
+        {% for availability in data.availabilities %}
+          <td class="{% if time_slot in availability.time_slots %} bg-success-custom {% else %}bg-danger-custom {% endif %} text-center">
+            {% if time_slot in availability.time_slots %}
+              &#x2713
+            {% else %}
+              X
+            {% endif %}
+          </td>
+        {% endfor %}
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</div>
+
+</div>
+
+<br/>
+{% endfor %}
+
+
+
+
+
+{% endblock %}
+
+
+<!--<li> Attendees: <br/>-->
+<!--    {% for user in data.session.attendees.all%}-->
+<!--     <ul><li> {{ user }} </li> </ul>-->
+<!--    {% endfor %}-->
+<!--    </li>-->
+
+<!--       <li> Available Times: <br/>-->
+<!--    {% for availability in data.availabilities%}-->
+<!--     <ul><li> {{ availability.time_slots }} </li> </ul>-->
+<!--    {% endfor %}-->
+<!--    </li>-->
+<!--removed from first loop-->
