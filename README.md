@@ -4,7 +4,7 @@ A study group web application for Hoos by Hoos
 
 
 
-TO RUN: \
+TO RUN: 
 
 1. Activate Virtual Enviroment 
 2. pip install -r requirements.txt 
