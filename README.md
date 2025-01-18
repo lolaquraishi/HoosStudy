@@ -6,11 +6,12 @@ A study group web application for Hoos by Hoos
 
 TO RUN: 
 
-1. Activate Virtual Enviroment 
-2. pip install -r requirements.txt 
-3. python manage.py makemigrations 
-4. python manage.py migrate 
-5. python3 manage.py runserver 
+1. Activate Virtual Enviroment
+2. brew install postgresql
+3. pip install -r requirements.txt 
+4. python manage.py makemigrations 
+5. python manage.py migrate 
+6. python3 manage.py runserver 
 
 
 
